@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Farm Next - Koyambedu Vegetable Market Dashboard{% endblock %}
+
+{% block page_title %}Market Dashboard{% endblock %}
+{% block page_subtitle %}Live price tracking and market insights from Koyambedu{% endblock %}
+
+{% block content %}
+<!-- Overview Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card border-glow-emerald">
+        <div class="stat-icon bg-emerald-trans">
+            <i class="fa-solid fa-carrot"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Vegetables Tracked</span>
+            <h3 class="stat-value">{{ stats.total_vegetables }}</h3>
+        </div>
+    </div>
+    
+    <div class="stat-card border-glow-blue">
+        <div class="stat-icon bg-blue-trans">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Price History Range</span>
+            <h3 class="stat-value" style="font-size: 1.15rem; margin-top: 5px;">{{ stats.min_date }} to {{ stats.latest_date }}</h3>
+        </div>
+    </div>
+
+    <div class="stat-card border-glow-amber">
+        <div class="stat-icon bg-amber-trans">
+            <i class="fa-solid fa-shop"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Avg Wholesale Price</span>
+            <h3 class="stat-value">₹{{ stats.avg_wholesale }}<span class="unit-text">/kg</span></h3>
+        </div>
+    </div>
+
+    <div class="stat-card border-glow-purple">
+        <div class="stat-icon bg-purple-trans">
+            <i class="fa-solid fa-basket-shopping"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Avg Retail Price</span>
+            <h3 class="stat-value">₹{{ stats.avg_retail }}<span class="unit-text">/kg</span></h3>
+        </div>
+    </div>
+</div>
+
+<!-- Highlights: Gainers and Losers -->
+<div class="highlights-section mt-6">
+    <div class="section-header">
+        <h3 class="section-title"><i class="fa-solid fa-fire"></i> Market Highlights (Daily Volatility)</h3>
+        <p class="section-subtitle">Top daily price movements relative to the previous trading day ({{ highlights.prior_date }} vs {{ highlights.latest_date }})</p>
+    </div>
+    
+    <div class="highlights-grid">
+        <!-- Gainers Card -->
+        <div class="highlight-column border-glow-green">
+            <div class="column-header text-green">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+                <h4>Top Gainers</h4>
+            </div>
+            <div class="highlight-list">
+                {% if highlights.gainers %}
+                    {% for item in highlights.gainers %}
+                    <div class="highlight-item">
+                        <div class="highlight-item-info">
+                            <span class="highlight-item-name">{{ item.vegetable_name }}</span>
+                            <span class="highlight-item-tamil">{{ item.tamil_name }}</span>
+                        </div>
+                        <div class="highlight-item-prices">
+                            <span class="price-old">₹{{ item.price_old }}</span>
+                            <i class="fa-solid fa-angles-right price-arrow"></i>
+                            <span class="price-new text-green">₹{{ item.price_new }}</span>
+                        </div>
+                        <span class="badge badge-green">+{{ item.pct_change }}%</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data-msg">No significant price increases today.</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Losers Card -->
+        <div class="highlight-column border-glow-red">
+            <div class="column-header text-red">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+                <h4>Top Losers</h4>
+            </div>
+            <div class="highlight-list">
+                {% if highlights.losers %}
+                    {% for item in highlights.losers %}
+                    <div class="highlight-item">
+                        <div class="highlight-item-info">
+                            <span class="highlight-item-name">{{ item.vegetable_name }}</span>
+                            <span class="highlight-item-tamil">{{ item.tamil_name }}</span>
+                        </div>
+                        <div class="highlight-item-prices">
+                            <span class="price-old">₹{{ item.price_old }}</span>
+                            <i class="fa-solid fa-angles-right price-arrow"></i>
+                            <span class="price-new text-red">₹{{ item.price_new }}</span>
+                        </div>
+                        <span class="badge badge-red">{{ item.pct_change }}%</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-data-msg">No significant price drops today.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- All Vegetables Section -->
+<div class="vegetables-section mt-8">
+    <div class="section-header-flex">
+        <div class="section-header">
+            <h3 class="section-title"><i class="fa-solid fa-table-list"></i> Vegetable Catalog</h3>
+            <p class="section-subtitle">Real-time prices for all {{ stats.total_vegetables }} items tracked at Koyambedu market</p>
+        </div>
+        
+        <!-- Search and Sort Controls -->
+        <div class="controls-container">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="veg-search" placeholder="Search vegetable or Tamil name...">
+            </div>
+            
+            <div class="sort-box">
+                <i class="fa-solid fa-sort sort-icon"></i>
+                <select id="veg-sort">
+                    <option value="name-asc">Sort: A - Z</option>
+                    <option value="name-desc">Sort: Z - A</option>
+                    <option value="wholesale-asc">Wholesale: Low to High</option>
+                    <option value="wholesale-desc">Wholesale: High to Low</option>
+                    <option value="retail-desc">Retail: High to Low</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Empty Search State -->
+    <div id="no-results" class="no-results-card hidden">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+        <h4>No vegetables found</h4>
+        <p>Try searching for a different name, spelling, or Tamil character.</p>
+    </div>
+
+    <!-- Vegetables Card Grid -->
+    <div class="vegetables-grid" id="vegetables-grid">
+        {% for item in latest_prices %}
+            <!-- Calculate change compared to history if available, but let's calculate a dummy or fallback check -->
+            {% set veg_highlight = highlights.gainers + highlights.losers %}
+            {% set match = namespace(found=false, pct=0.0) %}
+            {% for h in veg_highlight %}
+                {% if h.vegetable_name == item.vegetable_name %}
+                    {% set match.found = True %}
+                    {% set match.pct = h.pct_change %}
+                {% endif %}
+            {% endfor %}
+            
+            <a href="{{ url_for('vegetable_detail', name=item.vegetable_name) }}" 
+               class="veg-card-link"
+               data-name="{{ item.vegetable_name | lower }}" 
+               data-tamil="{{ item.tamil_name }}" 
+               data-wholesale="{{ item.wholesale_price }}" 
+               data-retail="{{ item.retail_avg if item.retail_avg is not none else 0 }}" 
+               data-change="{{ match.pct }}">
+                <div class="veg-card">
+                    <div class="veg-card-header">
+                        <div class="veg-card-info">
+                            <h4 class="veg-card-name">{{ item.vegetable_name }}</h4>
+                            <span class="veg-card-tamil">{{ item.tamil_name }}</span>
+                        </div>
+                        
+                        {% if match.found %}
+                            {% if match.pct > 0 %}
+                                <span class="veg-trend text-green"><i class="fa-solid fa-arrow-up"></i> +{{ match.pct }}%</span>
+                            {% elif match.pct < 0 %}
+                                <span class="veg-trend text-red"><i class="fa-solid fa-arrow-down"></i> {{ match.pct }}%</span>
+                            {% else %}
+                                <span class="veg-trend text-muted"><i class="fa-solid fa-minus"></i> 0.0%</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="veg-trend text-muted"><i class="fa-solid fa-minus"></i> Stable</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="veg-prices">
+                        <div class="price-row">
+                            <span class="price-label">Wholesale:</span>
+                            <span class="price-value font-jakarta">₹{{ item.wholesale_price }}<span class="price-unit">/kg</span></span>
+                        </div>
+                        <div class="price-row">
+                            <span class="price-label">Retail (Avg):</span>
+                            {% if item.retail_avg is not none %}
+                                <span class="price-value text-blue font-jakarta">₹{{ "%.1f" | format(item.retail_avg) }}<span class="price-unit">/kg</span></span>
+                            {% else %}
+                                <span class="price-value text-muted font-jakarta">N/A</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Retail range display -->
+                    <div class="veg-retail-range">
+                        {% if item.retail_min is not none and item.retail_max is not none %}
+                            <span class="range-text">Retail Range: <strong>₹{{ item.retail_min | int }} - ₹{{ item.market_name if item.retail_max is none else item.retail_max | int }}</strong></span>
+                            <div class="range-bar-container">
+                                <div class="range-bar-fill" style="width: 100%"></div>
+                            </div>
+                        {% else %}
+                            <span class="range-text text-muted">Range details unavailable</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="veg-card-footer">
+                        <span class="market-name-tag"><i class="fa-solid fa-location-dot"></i> Koyambedu</span>
+                        <span class="view-trends-link">View Trends <i class="fa-solid fa-chevron-right"></i></span>
+                    </div>
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

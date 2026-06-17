@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Farm Next - Koyambedu Vegetable Prices & Trends{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Interactive dashboard tracking wholesale and retail vegetable prices at Chennai Koyambedu Market. View 4+ years of price histories and trends.{% endblock %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- ApexCharts for interactive graphics -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>Farm Next</h1>
+                    <span>Koyambedu Tracker</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.path == '/' %}active{% endif %}" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('compare') }}" class="nav-item {% if request.path == '/compare' %}active{% endif %}" id="nav-compare">
+                    <i class="fa-solid fa-arrows-left-right"></i>
+                    <span>Compare Crops</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="market-status">
+                    <span class="status-dot online"></span>
+                    <div class="status-info">
+                        <span class="status-label">Database Loaded</span>
+                        <span class="status-val">90,945 rows</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header bar -->
+            <header class="content-header">
+                <div class="header-title-container">
+                    <h2 class="page-title">{% block page_title %}Market Dashboard{% endblock %}</h2>
+                    <p class="page-subtitle">{% block page_subtitle %}Real-time vegetable analytics & historical trends{% endblock %}</p>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="current-date-badge">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span>Latest Update: {% if stats %}{{ stats.latest_date }}{% else %}2026-06-15{% endif %}</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard and details content injection -->
+            <div class="content-body">
+                {% if error_title %}
+                <div class="error-container">
+                    <div class="error-card">
+                        <div class="error-icon">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <h3>{{ error_title }}</h3>
+                        <p>{{ error_message }}</p>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-primary mt-4">
+                            <i class="fa-solid fa-house"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                    {% block content %}{% endblock %}
+                {% endif %}
+            </div>
+            
+            <footer class="app-footer">
+                <p>&copy; 2026 Farm Next. Developed using Koyambedu Historical Price Dataset. Unit: 1kg. Market: Koyambedu, Chennai.</p>
+            </footer>
+        </main>
+    </div>
+    
+    <!-- Main JS Application -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

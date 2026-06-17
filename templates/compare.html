@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Farm Next - Vegetable Price Comparison{% endblock %}
+
+{% block page_title %}Compare Crops{% endblock %}
+{% block page_subtitle %}Overlay and analyze price trends for up to 5 vegetables simultaneously{% endblock %}
+
+{% block content %}
+<div class="compare-container">
+    <!-- Left Panel: Selector Checklist -->
+    <div class="compare-selector-panel">
+        <div class="selector-header">
+            <h4>Select Vegetables</h4>
+            <span class="selection-count-badge" id="selection-count">0 / 5 Selected</span>
+        </div>
+        
+        <div class="search-box mb-4" style="width: 100%;">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="selector-search" placeholder="Search crops...">
+        </div>
+        
+        <div class="selector-list" id="selector-list">
+            {% for veg in vegetables %}
+            <label class="selector-item" data-name="{{ veg.name | lower }}" data-tamil="{{ veg.tamil_name }}">
+                <input type="checkbox" name="compare-veg" value="{{ veg.name }}" data-tamil="{{ veg.tamil_name }}">
+                <span class="custom-checkbox"></span>
+                <div class="selector-item-text">
+                    <span class="veg-name">{{ veg.name }}</span>
+                    <span class="veg-tamil">{{ veg.tamil_name }}</span>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Right Panel: Chart and Details -->
+    <div class="compare-display-panel">
+        <!-- Selected Vegetable Tags -->
+        <div class="selected-tags-card mb-4">
+            <span class="tags-label">Comparing:</span>
+            <div class="selected-tags-list" id="selected-tags">
+                <!-- Injected via JS -->
+                <span class="no-selections-text" id="no-tags-text">No items selected</span>
+            </div>
+        </div>
+        
+        <!-- Chart Container -->
+        <div class="chart-section-card">
+            <div class="chart-header">
+                <div class="chart-title-group">
+                    <h3 class="chart-title"><i class="fa-solid fa-chart-line"></i> Comparative Price History</h3>
+                    <p class="chart-subtitle">Wholesale price comparison (₹/kg) over time</p>
+                </div>
+                <!-- Time Range Selector -->
+                <div class="range-selector" id="compare-timeline-selector">
+                    <button class="range-btn" data-range="1m">1M</button>
+                    <button class="range-btn" data-range="3m">3M</button>
+                    <button class="range-btn active" data-range="6m">6M</button>
+                    <button class="range-btn" data-range="1y">1Y</button>
+                    <button class="range-btn" data-range="all">ALL</button>
+                </div>
+            </div>
+            
+            <div class="chart-body" style="min-height: 400px;">
+                <!-- Empty State -->
+                <div id="compare-empty-state" class="compare-empty-overlay">
+                    <i class="fa-solid fa-square-poll-vertical"></i>
+                    <h4>No Vegetables Selected</h4>
+                    <p>Use the checklist on the left to select and compare up to 5 vegetables.</p>
+                </div>
+                
+                <!-- Loading Overlay -->
+                <div id="compare-chart-loading" class="chart-loading-overlay hidden">
+                    <div class="spinner"></div>
+                    <span>Fetching comparative price logs...</span>
+                </div>
+                
+                <div id="compare-chart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/compare.js') }}"></script>
+{% endblock %}

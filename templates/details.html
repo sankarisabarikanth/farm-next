@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Farm Next - {{ name }} Price History & Trends{% endblock %}
+
+{% block page_title %}{{ name }}{% endblock %}
+{% block page_subtitle %}{{ tamil_name }} — Historical price trends & market metrics{% endblock %}
+
+{% block content %}
+<!-- Back to Dashboard -->
+<div class="back-nav mb-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-left-long"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Current Prices Stats Grid -->
+<div class="stats-grid mb-6">
+    <div class="stat-card border-glow-emerald">
+        <div class="stat-icon bg-emerald-trans">
+            <i class="fa-solid fa-shop"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Current Wholesale</span>
+            <h3 class="stat-value">₹{{ current.wholesale_price }}<span class="unit-text">/kg</span></h3>
+        </div>
+    </div>
+    
+    <div class="stat-card border-glow-blue">
+        <div class="stat-icon bg-blue-trans">
+            <i class="fa-solid fa-basket-shopping"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Current Retail (Avg)</span>
+            <h3 class="stat-value">
+                {% if current.retail_avg is not none %}
+                    ₹{{ "%.1f" | format(current.retail_avg) }}<span class="unit-text">/kg</span>
+                {% else %}
+                    N/A
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+
+    <div class="stat-card border-glow-amber">
+        <div class="stat-icon bg-amber-trans">
+            <i class="fa-solid fa-arrows-left-right"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Current Retail Range</span>
+            <h3 class="stat-value" style="font-size: 1.35rem;">
+                {% if current.retail_min is not none and current.retail_max is not none %}
+                    ₹{{ current.retail_min | int }} - ₹{{ current.retail_max | int }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </h3>
+        </div>
+    </div>
+
+    <div class="stat-card border-glow-purple">
+        <div class="stat-icon bg-purple-trans">
+            <i class="fa-solid fa-tags"></i>
+        </div>
+        <div class="stat-content">
+            <span class="stat-label">Min / Max Wholesale</span>
+            <h3 class="stat-value" style="font-size: 1.35rem;">₹{{ current.minimum_price }} - ₹{{ current.maximum_price }}</h3>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Container -->
+<div class="chart-section-card mb-6">
+    <div class="chart-header">
+        <div class="chart-title-group">
+            <h3 class="chart-title"><i class="fa-solid fa-chart-area"></i> Price History & Trends</h3>
+            <p class="chart-subtitle">Compare wholesale and retail price fluctuations over time</p>
+        </div>
+        <!-- Time Range Selector -->
+        <div class="range-selector" id="timeline-selector">
+            <button class="range-btn" data-range="1m">1M</button>
+            <button class="range-btn" data-range="3m">3M</button>
+            <button class="range-btn active" data-range="6m">6M</button>
+            <button class="range-btn" data-range="1y">1Y</button>
+            <button class="range-btn" data-range="all">ALL</button>
+        </div>
+    </div>
+    
+    <div class="chart-body">
+        <div id="chart-loading" class="chart-loading-overlay hidden">
+            <div class="spinner"></div>
+            <span>Loading price history...</span>
+        </div>
+        <div id="price-chart"></div>
+    </div>
+</div>
+
+<!-- Trend stats summary based on range -->
+<div class="stats-summary-grid mb-6">
+    <!-- Wholesale range stats -->
+    <div class="stat-summary-card">
+        <div class="summary-header">
+            <i class="fa-solid fa-warehouse text-emerald"></i>
+            <h4>Wholesale Price Analysis (<span class="selected-range-label">6 Months</span>)</h4>
+        </div>
+        <div class="summary-metrics">
+            <div class="summary-metric">
+                <span class="metric-label">Minimum Price</span>
+                <span class="metric-value font-jakarta" id="summary-wholesale-min">₹{{ initial_stats.min_wholesale }}</span>
+            </div>
+            <div class="summary-metric">
+                <span class="metric-label">Maximum Price</span>
+                <span class="metric-value font-jakarta" id="summary-wholesale-max">₹{{ initial_stats.max_wholesale }}</span>
+            </div>
+            <div class="summary-metric">
+                <span class="metric-label">Average Price</span>
+                <span class="metric-value font-jakarta text-emerald" id="summary-wholesale-avg">₹{{ initial_stats.avg_wholesale }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Retail range stats -->
+    <div class="stat-summary-card">
+        <div class="summary-header">
+            <i class="fa-solid fa-store text-blue"></i>
+            <h4>Retail Price Analysis (<span class="selected-range-label">6 Months</span>)</h4>
+        </div>
+        <div class="summary-metrics">
+            <div class="summary-metric">
+                <span class="metric-label">Minimum Price</span>
+                <span class="metric-value font-jakarta" id="summary-retail-min">
+                    {% if initial_stats.min_retail is not none %}₹{{ initial_stats.min_retail | int }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+            <div class="summary-metric">
+                <span class="metric-label">Maximum Price</span>
+                <span class="metric-value font-jakarta" id="summary-retail-max">
+                    {% if initial_stats.max_retail is not none %}₹{{ initial_stats.max_retail | int }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+            <div class="summary-metric">
+                <span class="metric-label">Average Price</span>
+                <span class="metric-value font-jakarta text-blue" id="summary-retail-avg">
+                    {% if initial_stats.avg_retail is not none %}₹{{ initial_stats.avg_retail }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Raw Price History Table -->
+<div class="table-section-card">
+    <div class="table-header-flex">
+        <div class="table-title-group">
+            <h3 class="table-title"><i class="fa-solid fa-table"></i> Historical Price Data</h3>
+            <p class="table-subtitle">Complete daily records listing wholesale, retail and limit prices</p>
+        </div>
+        
+        <div class="table-actions">
+            <!-- Row Counter -->
+            <span class="row-count-text" id="table-row-count">Showing 0-0 of 0 records</span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="data-table" id="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Wholesale (₹/kg)</th>
+                    <th>Retail Avg (₹/kg)</th>
+                    <th>Retail Range (₹/kg)</th>
+                    <th>Daily Min (₹/kg)</th>
+                    <th>Daily Max (₹/kg)</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Injected via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Table Pagination -->
+    <div class="table-pagination">
+        <button class="btn btn-pagination" id="btn-prev-page" disabled>
+            <i class="fa-solid fa-angle-left"></i> Previous
+        </button>
+        <span class="pagination-info" id="pagination-info">Page 1 of 1</span>
+        <button class="btn btn-pagination" id="btn-next-page" disabled>
+            Next <i class="fa-solid fa-angle-right"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Embed the vegetable name in JS global scope so charts.js can fetch the correct data
+    const VEGETABLE_NAME = "{{ name | safe }}";
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
