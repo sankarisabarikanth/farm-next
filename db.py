@@ -1,7 +1,9 @@
 import sqlite3
 import os
 
-DB_PATH = r"c:\Users\Sankari Sabarikanth\Downloads\farm-next\farm_next.db"
+# Dynamic absolute path relative to db.py to work both locally and in Vercel serverless environments
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "farm_next.db")
 
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
